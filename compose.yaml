@@ -1,9 +1,63 @@
 services:
-  postgres:
-    image: 'postgres:latest'
+  database:
+    container_name: "mariadb"
+    image: 'mariadb:latest'
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      - 'MARIADB_DATABASE=album'
+      - 'MARIADB_PASSWORD=test'
+      - 'MARIADB_USER=test'
+      - 'MARIADB_ROOT_PASSWORD=root'
     ports:
-      - '5432'
+      - '3306:3306'
+
+  kafka:
+    container_name: "kafka"
+    image: 'apache/kafka:latest'
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: EXTERNAL://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9092,INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+
+  redis:
+    container_name: "redis"
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+
+  wiremock:
+    container_name: "wiremock"
+    image: 'wiremock/wiremock:latest'
+    ports:
+      - '8089:8080'
+    volumes:
+      - ./wiremock:/home/wiremock
+
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://database:3306/album
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - CLIENTS_SPOTIFY_URL=http://wiremock:8080
+      - SPRING_DATA_REDIS_HOST=redis
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - database
+      - wiremock
+      - redis
