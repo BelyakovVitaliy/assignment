@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="create-artists" author="vitalii.beliakov">
+        <createTable tableName="artists">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="album_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-albums" author="vitalii.beliakov">
+        <createTable tableName="albums">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="NEW">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_src" type="VARCHAR(500)"/>
+            <column name="artist_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_album_artist"
+                             references="artists(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-platforms" author="vitalii.beliakov">
+        <createTable tableName="platforms">
+            <column name="album_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_platforms_album"
+                             references="albums(id)"/>
+            </column>
+            <column name="platforms" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-tracks" author="vitalii.beliakov">
+        <createTable tableName="tracks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="src" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="album_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_track_album"
+                             references="albums(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-outbox" author="vitalii.beliakov">
+        <createTable tableName="outbox">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="CREATED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="album_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-validation-results" author="vitalii.beliakov">
+        <createTable tableName="validation_results">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="album_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="validation_results"
+                             columnNames="album_id, type"
+                             constraintName="uq_validation_results_album_type"/>
+    </changeSet>
+
+
+    <changeSet id="create-publishing-results" author="vitalii.beliakov">
+        <createTable tableName="publishing_results">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="album_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="destination" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="result" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
